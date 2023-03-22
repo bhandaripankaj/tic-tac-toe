@@ -1,15 +1,11 @@
 import './App.css';
-import { Box, Button, Modal, Typography } from '@mui/material';
+import { Box, Button, Chip, Modal, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 import TripOriginIcon from '@mui/icons-material/TripOrigin';
 import CloseIcon from '@mui/icons-material/Close';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Stack } from '@mui/system';
 const style = {
-  // display:"row",
-  // alignContent:"center",
-  // alignItems:"center",
-  // justifyContent:"center",
-  // justifyItems:"center",
   textAlign:"center",
   position: 'absolute',
   top: '50%',
@@ -22,6 +18,23 @@ const style = {
   boxShadow: 24,
   p: 4,
 };
+const button = {
+  bgcolor:"red",
+  // color:"#fff",
+  marginTop:"10%",
+  marginRight:"1%",
+  width:100,
+  height:100,
+  "&:hover": { bgcolor: "red" }
+}
+const boxStyle={
+    width:300,
+    bgcolor:"#e1bee7",
+    margin:"auto",
+    marginTop:"10%",
+    borderRadius:"10px",
+    paddingBottom:"5px"
+}
 let valueOfArray = [
   {
     value:""
@@ -51,13 +64,16 @@ let valueOfArray = [
     value:""
   }
 ]
-
 function App() {
  const [play,setPlay] = useState(false)
  const [selected,setSelect] = useState([])
  const [value,setValue] = useState("")
- const [open, setOpen] = useState(true);
+ const [open, setOpen] = useState(false);
  let [newArry,setnewArry] = useState([...valueOfArray])
+ const [selectIcon, setSelectIcon] = useState("")
+ const [selectNot, setSelectNot] = useState(false)
+ const [run, setRun] = useState(false)
+
 let array = []
 
 function checkWinner(inupt) {
@@ -73,24 +89,30 @@ function checkWinner(inupt) {
   ];
   for (const key of winnerArray) {
     const [a, b, c] = key;
-    console.log("inupt",inupt)
     if (inupt&&
       newArry[a].value === inupt &&
       newArry[b].value === inupt &&
       newArry[c].value === inupt
     ) {
-      // setOpen(true)
+      setOpen(true)
       return true;
     }
     // return null
   }
 }
     function clickItm(key){
+      if(!selectIcon){
+        setSelectNot(true)
+        return
+      }
       setPlay(true)
       array.push(key)
       setSelect([...new Set([...selected,...array])])
       if(newArry[key].value ===""){
-        if(value === "" || value === "x"){
+        if(value === "" && selectIcon){
+          setValue(selectIcon)
+          newArry[key].value = selectIcon
+        } else if(value === "x"){
           setValue("o")
           newArry[key].value = "o"
     }else if(value === "o"){
@@ -100,7 +122,6 @@ function checkWinner(inupt) {
       }
     setnewArry([...newArry])
     } 
-
   function Item(props) {
     const { sx, ...other } = props;
     return (
@@ -140,8 +161,6 @@ function checkWinner(inupt) {
     ]),
   };
   function renderIcon(key,itm){
-  console.log("nemmwArry",selected)
-  console.log("nemmwArry",selected.some(itm=>itm===key))
     let check = selected.some(itm=>itm===key)
     return(
       <>
@@ -150,9 +169,7 @@ function checkWinner(inupt) {
       </>
     )
   }
-  // const handleOpen = () => setOpen(true);
   const handleClose = () =>{
-    //  console.log("clo", newArry)
     setOpen(false);
    setnewArry(newArry.map(el=>{
     el.value = ""
@@ -162,16 +179,60 @@ function checkWinner(inupt) {
   array = []
   setPlay(false)
   setValue("")
+  setSelectIcon("")
+  setRun(false)
   }
+  const selectTicTac = (icon) => {
+    setSelectIcon(icon)
+    setSelectNot(false)
+    setRun(true)
+  };
+  useEffect(()=>{
+    checkWinner(value)
+  },[value])
+  
   return (
     <>
      <Box className="App">
       <img src='tic-tac.png'  alt='tic-tac' style={{position:"absolute",width:"200px" ,margin:"-150px 0px 0px -700px"}}></img>
+      <Box
+      sx={{...boxStyle}}
+      >
+      {selectNot&& <p>Please select any one!</p> }
+     {!run && ( 
+      <>
+      <Button onClick={() => selectTicTac("o")}  color="secondary"><TripOriginIcon sx={{ fontSize: "80px",color:"#ffff",":hover":{bgcolor:"#ce93d8",width:90,height:90 }}}/></Button>
+       <Button onClick={() => selectTicTac("x")} color="secondary"><CloseIcon sx={{ fontSize: "95px" ,color:"#78909c",":hover":{bgcolor:"#ce93d8"} }}/></Button>
+        <Chip color="warning" label="Please Select"/>
+      </>
+     )}
+     {run&&(
+      <>
+      <Stack spacing={1} alignItems="center" alignContent={"center"}>
+            <Stack direction="row" spacing={1}>
+            <Typography style={{fontSize:"30px",marginTop:"15px"}}>Player</Typography>
+            {!value && selectIcon==="o" && 
+            (<TripOriginIcon sx={{ fontSize: "80px",color:"#ffff"}}/>)  
+            }
+             {!value && selectIcon==="x" && 
+            (<CloseIcon sx={{ fontSize: "80px",color:"#78909c"}}/>)  
+            }  
+             {value && value==="x" && 
+            (<TripOriginIcon sx={{ fontSize: "80px",color:"#ffff"}}/>)  
+            }
+             {value && value==="o" && 
+            (<CloseIcon sx={{ fontSize: "80px",color:"#78909c"}}/>)  
+            } 
+            </Stack>
+          </Stack>
+      </>
+     )}
+      </Box>
       <Box 
       sx={{
         display:"flex",
         margin:"auto",
-        marginTop:"15%",
+        marginTop:"1%",
         padding:"0.4% 0.4% 0.4% 0.4%",
         color:"#4caf50",
         borderRadius:10,
@@ -181,21 +242,7 @@ function checkWinner(inupt) {
         border:1,
         borderColor:"white",
         }}> 
-        { checkWinner(value)&&( <div>
-      <Modal
-        open={open}
-        // onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={{...style,color:"#ef6c00"}}>
-          <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ mt: 2 }}>
-           You Win The Game!
-          </Typography>
-          <Button onClick={handleClose} sx={{marginTop:5,color:"#fff",bgcolor:"#66bb6a" ,":hover":{bgcolor:"#66bb6a"}}}  variant="text">Play again</Button>
-        </Box>
-      </Modal>
-    </div>)}
+
         <div style={{ width: '100%'}}>
       <Box
         sx={{
@@ -222,7 +269,20 @@ function checkWinner(inupt) {
     </div>
       </Box>
      </Box>
-    {/* {open&&<div>hhhh5</div>} */}
+   
+      <Modal
+        open={open}
+        // onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={{...style,color:"#ef6c00"}}>
+          <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ mt: 2 }}>
+           You Win The Game!
+          </Typography>
+          <Button onClick={handleClose} sx={{marginTop:5,color:"#fff",bgcolor:"#66bb6a" ,":hover":{bgcolor:"#66bb6a"}}}  variant="text">Play again</Button>
+        </Box>
+      </Modal>
     </>
   );
 }
